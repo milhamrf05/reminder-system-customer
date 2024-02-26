@@ -78,6 +78,18 @@
 
             <q-item-section> Buat reminder pelanggan baru </q-item-section>
           </q-item>
+          <q-separator></q-separator>
+          <q-item
+            clickable
+            v-ripple
+            @click="$router.push({ name: 'IntervalIndexPage' })"
+          >
+            <q-item-section avatar>
+              <q-icon name="category"></q-icon>
+            </q-item-section>
+
+            <q-item-section> Manage Kategori Customer </q-item-section>
+          </q-item>
           <div v-if="!isAuthenticated()">
             <q-separator></q-separator>
             <q-item

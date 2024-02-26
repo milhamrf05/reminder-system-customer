@@ -16,13 +16,42 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/add',
+    path: '/reminder-customer/add',
     component: () => import('layouts/UserLayout.vue'),
     children: [
       {
         path: '',
         component: () => import('pages/features/reminder-customer/AddPage.vue'),
         name: 'AddReminderCustomerPage',
+      },
+    ],
+    meta: {
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/reminder-customer/edit/:id',
+    component: () => import('layouts/UserLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () =>
+          import('pages/features/reminder-customer/EditPage.vue'),
+        name: 'EditReminderCustomerPage',
+      },
+    ],
+    meta: {
+      requiresAuth: true,
+    },
+  },
+  {
+    path: '/interval',
+    component: () => import('layouts/UserLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/features/interval/IndexPage.vue'),
+        name: 'IntervalIndexPage',
       },
     ],
     meta: {

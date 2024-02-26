@@ -39,6 +39,22 @@
                   <q-item-section>Hapus</q-item-section>
                 </q-item>
               </q-list>
+              <q-list>
+                <q-item clickable @click="setDetailDialog(props.row)">
+                  <q-item-section avatar>
+                    <q-icon color="blue" name="info" />
+                  </q-item-section>
+                  <q-item-section>Detail</q-item-section>
+                </q-item>
+              </q-list>
+              <q-list>
+                <q-item clickable @click="setEditedData(props.row)">
+                  <q-item-section avatar>
+                    <q-icon color="green" name="edit" />
+                  </q-item-section>
+                  <q-item-section>Edit</q-item-section>
+                </q-item>
+              </q-list>
             </q-menu>
           </q-td>
           <q-td key="license_plate_number" :props="props">
@@ -46,6 +62,15 @@
           >
           <q-td key="interval_to_now" :props="props">
             {{ props.row.interval_to_now.name }}</q-td
+          >
+          <q-td key="interval_to_now" :props="props">
+            {{
+              date.formatDate(
+                props.row.last_service,
+                'dddd, DD MMMM YYYY',
+                useDateLocale
+              )
+            }}</q-td
           >
         </q-tr>
       </template>
@@ -58,6 +83,7 @@
         :to="{ name: 'AddReminderCustomerPage' }"
       />
     </q-page-sticky>
+    <DetailDialog />
   </q-page>
 </template>
 <script setup lang="ts">
@@ -66,7 +92,15 @@ import { VehicleServiceRecords } from 'src/types/vehicleServiceRecords';
 import { onMounted, ref } from 'vue';
 import { useApiWithAuthorization } from 'src/composables/api';
 import { PaginationProps } from 'src/types/paginationProps';
+import { date, useQuasar } from 'quasar';
+import { useDateLocale } from 'src/composables/date';
+import { useVehicleServiceRecords } from 'src/stores/vehicleServiceRecords';
+import DetailDialog from 'components/reminder-customer/DetailDialog.vue';
+import { useRouter } from 'vue-router';
 
+const { dialog } = useQuasar();
+const router = useRouter();
+const { $state } = useVehicleServiceRecords();
 const pagination = ref({
   sortBy: 'desc',
   descending: false,
@@ -96,10 +130,18 @@ const columns: QTableColumn[] = [
   {
     name: 'interval_to_now',
     required: true,
-    label: 'Interval',
+    label: 'Kategori customer',
     align: 'left',
     sortable: true,
     field: (row: VehicleServiceRecords) => row.interval_to_now.name,
+  },
+  {
+    name: 'last_service',
+    required: true,
+    label: 'Servis Terakhir',
+    align: 'left',
+    sortable: true,
+    field: (row: VehicleServiceRecords) => row.last_service,
   },
 ];
 
@@ -141,18 +183,35 @@ const onRequest = async (props: PaginationProps) => {
 };
 
 const deleteData = async (id: number) => {
-  try {
-    await useApiWithAuthorization.delete(`vehicle-service-records/${id}`);
-    await onRequest({
-      pagination: {
-        page: 1,
-        rowsPerPage: pagination.value.rowsPerPage,
-        sortBy: 'created_at',
-      },
-    });
-  } catch (error) {
-    throw error;
-  }
+  dialog({
+    title: 'Konfirmasi',
+    message: 'Apakah anda yakin ingin menghapus data tersebut',
+    cancel: true,
+    persistent: true,
+  }).onOk(async () => {
+    try {
+      await useApiWithAuthorization.delete(`vehicle-service-records/${id}`);
+      await onRequest({
+        pagination: {
+          page: 1,
+          rowsPerPage: pagination.value.rowsPerPage,
+          sortBy: 'created_at',
+        },
+      });
+    } catch (error) {
+      throw error;
+    }
+  });
+};
+
+const setDetailDialog = (data: VehicleServiceRecords) => {
+  $state.isDetailDialog = true;
+  $state.selectedDetail = data;
+};
+
+const setEditedData = (data: VehicleServiceRecords) => {
+  $state.selectedEdit = data;
+  router.push({ name: 'EditReminderCustomerPage', params: { id: data.id } });
 };
 
 onMounted(() => {

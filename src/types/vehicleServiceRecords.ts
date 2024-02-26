@@ -8,12 +8,14 @@ export interface VehicleServiceRecords {
   interval_to_now_id: number;
   last_service: string;
   customer_name: string;
-  customer_number_phone: string;
+  customer_phone_number: string;
   vehicle_model: string;
   delivery_date: string;
   service_advisor_name: string;
   program_name: string;
   sales_branch: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AddReminderCustomerForm {
@@ -22,7 +24,7 @@ export interface AddReminderCustomerForm {
   interval_to_now: IntervalToNowLabel;
   last_service: string;
   customer_name: string;
-  customer_number_phone: string;
+  customer_phone_number: string;
   vehicle_model: string;
   delivery_date: string;
   service_advisor_name: string;

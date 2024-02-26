@@ -1,6 +1,6 @@
 <template>
   <q-page padding>
-    <div class="text-h5 q-mb-md">Tambah Data reminder pelanggan</div>
+    <div class="text-h5 q-mb-md">Edit Data reminder pelanggan</div>
     <!-- content -->
     <q-form @submit="onSubmit">
       <div class="row">
@@ -9,7 +9,7 @@
             outlined
             type="text"
             class="q-mr-sm"
-            v-model="addReminderCustomerForm.chassis_number"
+            v-model="editReminderCustomer.chassis_number"
             lazy-rules
             label="Nomor Rangka *"
             :error="v$.chassis_number.$error"
@@ -25,7 +25,7 @@
             outlined
             class="q-mr-sm"
             type="text"
-            v-model="addReminderCustomerForm.license_plate_number"
+            v-model="editReminderCustomer.license_plate_number"
             lazy-rules
             label="Plat Nomor *"
             :error="v$.license_plate_number.$error"
@@ -41,7 +41,7 @@
             outlined
             class="q-mr-sm"
             type="text"
-            v-model="addReminderCustomerForm.customer_name"
+            v-model="editReminderCustomer.customer_name"
             lazy-rules
             label="Nama Pelanggan *"
             :error="v$.customer_name.$error"
@@ -57,7 +57,7 @@
             outlined
             class="q-mr-sm"
             type="text"
-            v-model="addReminderCustomerForm.customer_phone_number"
+            v-model="editReminderCustomer.customer_phone_number"
             lazy-rules
             label="Nomor HP Pelanggan *"
             :error="v$.customer_phone_number.$error"
@@ -73,7 +73,7 @@
             outlined
             class="q-mr-sm"
             type="text"
-            v-model="addReminderCustomerForm.vehicle_model"
+            v-model="editReminderCustomer.vehicle_model"
             lazy-rules
             label="Model Kendaraan *"
             :error="v$.vehicle_model.$error"
@@ -88,7 +88,7 @@
           <q-select
             filled
             :loading="intervalToNowDataLoading"
-            v-model="addReminderCustomerForm.interval_to_now"
+            v-model="editReminderCustomer.interval_to_now"
             :options="intervalToNowData"
             label="Kategori Customer"
           />
@@ -98,7 +98,7 @@
             outlined
             class="q-mr-sm"
             type="text"
-            v-model="addReminderCustomerForm.service_advisor_name"
+            v-model="editReminderCustomer.service_advisor_name"
             lazy-rules
             label="Nama SA / Sevice Advisor *"
             :error="v$.service_advisor_name.$error"
@@ -114,7 +114,7 @@
             outlined
             class="q-mr-sm"
             type="text"
-            v-model="addReminderCustomerForm.program_name"
+            v-model="editReminderCustomer.program_name"
             lazy-rules
             label="Nama Program *"
             :error="v$.program_name.$error"
@@ -130,7 +130,7 @@
             outlined
             class="q-mr-sm"
             type="text"
-            v-model="addReminderCustomerForm.sales_branch"
+            v-model="editReminderCustomer.sales_branch"
             lazy-rules
             label="Nama Cabang *"
             :error="v$.sales_branch.$error"
@@ -145,7 +145,7 @@
           <q-input
             filled
             label="Service Terakhir"
-            v-model="addReminderCustomerForm.last_service"
+            v-model="editReminderCustomer.last_service"
             mask="date"
             :rules="['date']"
           >
@@ -156,7 +156,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="addReminderCustomerForm.last_service">
+                  <q-date v-model="editReminderCustomer.last_service">
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -170,7 +170,7 @@
           <q-input
             filled
             label="Tanggal Pembelian"
-            v-model="addReminderCustomerForm.delivery_date"
+            v-model="editReminderCustomer.delivery_date"
             mask="date"
             :rules="['date']"
           >
@@ -181,7 +181,7 @@
                   transition-show="scale"
                   transition-hide="scale"
                 >
-                  <q-date v-model="addReminderCustomerForm.delivery_date">
+                  <q-date v-model="editReminderCustomer.delivery_date">
                     <div class="row items-center justify-end">
                       <q-btn v-close-popup label="Close" color="primary" flat />
                     </div>
@@ -194,7 +194,7 @@
       </div>
       <div class="row">
         <div class="col-md">
-          <q-btn type="submit" label="Submit" color="blue"></q-btn>
+          <q-btn type="submit" label="Edit" color="blue"></q-btn>
         </div>
       </div>
     </q-form>
@@ -207,15 +207,18 @@ import { useApiWithAuthorization } from 'src/composables/api';
 import { useRequired } from 'src/composables/validators';
 import { IntervalToNow } from 'src/types/intervalToNow';
 import { AddReminderCustomerForm } from 'src/types/vehicleServiceRecords';
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, reactive, ref, watchEffect } from 'vue';
 import { date } from 'quasar';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { useVehicleServiceRecords } from 'src/stores/vehicleServiceRecords';
 
+const { $state } = useVehicleServiceRecords();
 const intervalToNowData = ref([]);
 const intervalToNowDataLoading = ref(false);
 const { push: routerPush } = useRouter();
+const route = useRoute();
 
-const addReminderCustomerForm: AddReminderCustomerForm = reactive({
+const editReminderCustomer: AddReminderCustomerForm = reactive({
   chassis_number: '',
   customer_name: '',
   customer_phone_number: '',
@@ -244,7 +247,7 @@ const rules = {
   program_name: { required: useRequired() },
   sales_branch: { required: useRequired() },
 };
-const v$ = useVuelidate(rules, addReminderCustomerForm);
+const v$ = useVuelidate(rules, editReminderCustomer);
 
 const getIntervalToNow = async () => {
   try {
@@ -270,11 +273,13 @@ const getIntervalToNow = async () => {
 const onSubmit = async () => {
   if (!v$.value.$invalid) {
     try {
-      await useApiWithAuthorization.post('vehicle-service-records', {
-        ...addReminderCustomerForm,
-        interval_to_now_id: addReminderCustomerForm.interval_to_now.value,
-        customer_phone_number: addReminderCustomerForm.customer_phone_number,
-      });
+      await useApiWithAuthorization.patch(
+        `vehicle-service-records/${route.params.id}`,
+        {
+          ...editReminderCustomer,
+          interval_to_now_id: editReminderCustomer.interval_to_now.value,
+        }
+      );
       routerPush({ name: 'HomePage' });
     } catch (error) {
       throw error;
@@ -286,5 +291,38 @@ const onSubmit = async () => {
 
 onMounted(async () => {
   await getIntervalToNow();
+});
+
+watchEffect(async () => {
+  await getIntervalToNow();
+
+  if (!$state.selectedEdit.id) {
+    const response = await useApiWithAuthorization.get(
+      `vehicle-service-records/${route.params.id}`
+    );
+
+    $state.selectedEdit = response.data.service_record;
+  }
+  editReminderCustomer.chassis_number = $state.selectedEdit.chassis_number;
+  editReminderCustomer.customer_name = $state.selectedEdit.customer_name;
+  editReminderCustomer.customer_phone_number =
+    $state.selectedEdit.customer_phone_number;
+  editReminderCustomer.delivery_date = $state.selectedEdit.delivery_date;
+  editReminderCustomer.last_service = $state.selectedEdit.last_service;
+  editReminderCustomer.license_plate_number =
+    $state.selectedEdit.license_plate_number;
+  editReminderCustomer.program_name = $state.selectedEdit.program_name;
+  editReminderCustomer.sales_branch = $state.selectedEdit.sales_branch;
+  editReminderCustomer.service_advisor_name =
+    $state.selectedEdit.service_advisor_name;
+  editReminderCustomer.vehicle_model = $state.selectedEdit.vehicle_model;
+  editReminderCustomer.interval_to_now.id =
+    $state.selectedEdit.interval_to_now.id;
+  editReminderCustomer.interval_to_now.label =
+    $state.selectedEdit.interval_to_now.name;
+  editReminderCustomer.interval_to_now.name =
+    $state.selectedEdit.interval_to_now.name;
+  editReminderCustomer.interval_to_now.value =
+    $state.selectedEdit.interval_to_now.id;
 });
 </script>
