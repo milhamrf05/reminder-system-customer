@@ -45,6 +45,20 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/reminder-customer/reminder',
+    component: () => import('layouts/UserLayout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('pages/features/reminder/IndexPage.vue'),
+        name: 'ReminderIndexPage',
+      },
+    ],
+    meta: {
+      requiresAuth: true,
+    },
+  },
+  {
     path: '/interval',
     component: () => import('layouts/UserLayout.vue'),
     children: [

@@ -211,6 +211,7 @@ import { onMounted, reactive, ref, watchEffect } from 'vue';
 import { date } from 'quasar';
 import { useRoute, useRouter } from 'vue-router';
 import { useVehicleServiceRecords } from 'src/stores/vehicleServiceRecords';
+import { useMetaTitle } from 'src/composables/meta';
 
 const { $state } = useVehicleServiceRecords();
 const intervalToNowData = ref([]);
@@ -288,7 +289,7 @@ const onSubmit = async () => {
     v$.value.$touch();
   }
 };
-
+useMetaTitle('Buat Reminder Customer');
 onMounted(async () => {
   await getIntervalToNow();
 });

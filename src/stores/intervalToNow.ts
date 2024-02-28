@@ -1,19 +1,10 @@
 import { defineStore } from 'pinia';
+import { IntervalToNow } from 'src/types/intervalToNow';
 
-export const useCounterStore = defineStore('counter', {
+export const useIntervalToNowStore = defineStore('interval_to_now', {
   state: () => ({
-    counter: 0
+    showAddIntervalDialog: false,
+    showEditIntervalDialog: false,
+    editedInterval: {} as IntervalToNow,
   }),
-
-  getters: {
-    doubleCount (state) {
-      return state.counter * 2;
-    }
-  },
-
-  actions: {
-    getAllIntervalToNow() {
-      this.counter++;
-    }
-  }
 });

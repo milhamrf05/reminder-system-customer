@@ -66,6 +66,17 @@
 
             <q-item-section> Home </q-item-section>
           </q-item>
+          <q-item
+            clickable
+            v-ripple
+            @click="$router.push({ name: 'ReminderIndexPage' })"
+          >
+            <q-item-section avatar>
+              <q-icon name="pending_actions"></q-icon>
+            </q-item-section>
+
+            <q-item-section> Reminder Customer </q-item-section>
+          </q-item>
           <q-separator></q-separator>
           <q-item
             clickable
@@ -117,13 +128,6 @@
           </div>
           <div v-else>
             <q-separator></q-separator>
-            <q-item clickable v-ripple :to="{ name: 'ProfileIndexPage' }">
-              <q-item-section avatar>
-                <q-icon name="manage_accounts"></q-icon>
-              </q-item-section>
-
-              <q-item-section> Profile saya </q-item-section>
-            </q-item>
             <q-item clickable v-ripple @click="logout()">
               <q-item-section avatar>
                 <q-icon name="logout"></q-icon>

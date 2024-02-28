@@ -210,6 +210,7 @@ import { AddReminderCustomerForm } from 'src/types/vehicleServiceRecords';
 import { onMounted, reactive, ref } from 'vue';
 import { date } from 'quasar';
 import { useRouter } from 'vue-router';
+import { useMetaTitle } from 'src/composables/meta';
 
 const intervalToNowData = ref([]);
 const intervalToNowDataLoading = ref(false);
@@ -283,6 +284,8 @@ const onSubmit = async () => {
     v$.value.$touch();
   }
 };
+
+useMetaTitle('Buat Reminder Customer');
 
 onMounted(async () => {
   await getIntervalToNow();

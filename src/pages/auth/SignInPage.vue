@@ -89,6 +89,7 @@ import { api } from 'src/boot/axios';
 import { useRouter, useRoute } from 'vue-router';
 import { useSignInSetLocalStorage } from 'src/composables/local-storage';
 import axios from 'axios';
+import { useMetaTitle } from 'src/composables/meta';
 
 /**
  * Sign-In Page
@@ -220,6 +221,8 @@ const onSubmit = async (): Promise<void> => {
     v$.value.$touch();
   }
 };
+
+useMetaTitle('Sign In');
 
 onMounted(() => {
   if (route.query.isSignUp) {

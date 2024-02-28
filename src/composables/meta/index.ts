@@ -8,6 +8,6 @@ import { useMeta } from 'quasar';
 export const useMetaTitle = (title: string): void => {
   useMeta({
     title: title,
-    titleTemplate: (title) => `${title} - BKP Quality Issue`,
+    titleTemplate: (title) => `${title} - Auto 2000 Manyar`,
   });
 };

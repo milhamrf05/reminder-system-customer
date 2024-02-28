@@ -1,7 +1,7 @@
 <template>
   <q-page padding>
     <q-table
-      title="Semua Data Reminder Pelanggan"
+      title="Reminder Pelanggan"
       :rows="rows"
       :dense="$q.screen.lt.md"
       :columns="columns"
@@ -32,14 +32,6 @@
             {{ props.row.chassis_number }}
             <q-menu touch-position context-menu>
               <q-list>
-                <q-item clickable @click="deleteData(props.row.id)">
-                  <q-item-section avatar>
-                    <q-icon color="red" name="delete" />
-                  </q-item-section>
-                  <q-item-section>Hapus</q-item-section>
-                </q-item>
-              </q-list>
-              <q-list>
                 <q-item clickable @click="setDetailDialog(props.row)">
                   <q-item-section avatar>
                     <q-icon color="blue" name="info" />
@@ -47,23 +39,15 @@
                   <q-item-section>Detail</q-item-section>
                 </q-item>
               </q-list>
-              <q-list>
-                <q-item clickable @click="setEditedData(props.row)">
-                  <q-item-section avatar>
-                    <q-icon color="green" name="edit" />
-                  </q-item-section>
-                  <q-item-section>Edit</q-item-section>
-                </q-item>
-              </q-list>
             </q-menu>
           </q-td>
           <q-td key="license_plate_number" :props="props">
             {{ props.row.license_plate_number }}</q-td
           >
-          <q-td key="interval_to_now" :props="props">
-            {{ props.row.interval_to_now.name }}</q-td
+          <q-td key="customer_phone_number" :props="props">
+            {{ props.row.customer_phone_number }}</q-td
           >
-          <q-td key="interval_to_now" :props="props">
+          <q-td key="last_service" :props="props">
             {{
               date.formatDate(
                 props.row.last_service,
@@ -72,6 +56,12 @@
               )
             }}</q-td
           >
+          <q-td key="contacted" :props="props">
+            <q-checkbox
+              v-model="props.row.contacted"
+              @update:model-value="toggleContacted(props.row.id)"
+            />
+          </q-td>
         </q-tr>
       </template>
     </q-table>
@@ -88,19 +78,18 @@
 </template>
 <script setup lang="ts">
 import { QTableColumn } from 'quasar';
-import { VehicleServiceRecords } from 'src/types/vehicleServiceRecords';
+import {
+  VehicleServiceRecords,
+  VehicleServiceRecordsWithContacted,
+} from 'src/types/vehicleServiceRecords';
 import { onMounted, ref } from 'vue';
 import { useApiWithAuthorization } from 'src/composables/api';
 import { PaginationProps } from 'src/types/paginationProps';
-import { date, useQuasar } from 'quasar';
+import { date } from 'quasar';
 import { useDateLocale } from 'src/composables/date';
 import { useVehicleServiceRecords } from 'src/stores/vehicleServiceRecords';
 import DetailDialog from 'components/reminder-customer/DetailDialog.vue';
-import { useRouter } from 'vue-router';
 import { useMetaTitle } from 'src/composables/meta';
-
-const { dialog } = useQuasar();
-const router = useRouter();
 const { $state } = useVehicleServiceRecords();
 const pagination = ref({
   sortBy: 'desc',
@@ -118,7 +107,7 @@ const columns: QTableColumn[] = [
     label: 'Nomor Rangka',
     align: 'left',
     sortable: true,
-    field: (row: VehicleServiceRecords) => row.chassis_number,
+    field: (row: VehicleServiceRecordsWithContacted) => row.chassis_number,
   },
   {
     name: 'license_plate_number',
@@ -126,15 +115,17 @@ const columns: QTableColumn[] = [
     label: 'Plat Nomor',
     align: 'left',
     sortable: true,
-    field: (row: VehicleServiceRecords) => row.license_plate_number,
+    field: (row: VehicleServiceRecordsWithContacted) =>
+      row.license_plate_number,
   },
   {
-    name: 'interval_to_now',
+    name: 'customer_phone_number',
     required: true,
-    label: 'Kategori customer',
+    label: 'Nomor Telephone',
     align: 'left',
     sortable: true,
-    field: (row: VehicleServiceRecords) => row.interval_to_now.name,
+    field: (row: VehicleServiceRecordsWithContacted) =>
+      row.customer_phone_number,
   },
   {
     name: 'last_service',
@@ -142,7 +133,15 @@ const columns: QTableColumn[] = [
     label: 'Servis Terakhir',
     align: 'left',
     sortable: true,
-    field: (row: VehicleServiceRecords) => row.last_service,
+    field: (row: VehicleServiceRecordsWithContacted) => row.last_service,
+  },
+  {
+    name: 'contacted',
+    required: true,
+    label: 'Status pernah di hubungi',
+    align: 'left',
+    sortable: true,
+    field: (row: VehicleServiceRecordsWithContacted) => row.contacted,
   },
 ];
 
@@ -156,7 +155,7 @@ const onRequest = async (props: PaginationProps) => {
   try {
     // Fetch data from the server using an API call
     const response = await useApiWithAuthorization.get(
-      'vehicle-service-records',
+      'vehicle-service-records/get/reminders',
       {
         params: {
           page,
@@ -167,7 +166,18 @@ const onRequest = async (props: PaginationProps) => {
       }
     );
     // Update local data and pagination based on the server response
-    rows.value = response.data.service_records;
+    const remindersWithBoolean = response.data.reminders.map(
+      (reminder: VehicleServiceRecordsWithContacted) => {
+        return {
+          ...reminder,
+          contacted: !!reminder.contacted,
+        };
+      }
+    );
+
+    // Update local data and pagination based on the server response
+    rows.value = remindersWithBoolean;
+
     pagination.value.rowsNumber = response.data.total_records;
 
     // Update local pagination object
@@ -182,40 +192,22 @@ const onRequest = async (props: PaginationProps) => {
   }
 };
 
-const deleteData = async (id: number) => {
-  dialog({
-    title: 'Konfirmasi',
-    message: 'Apakah anda yakin ingin menghapus data tersebut',
-    cancel: true,
-    persistent: true,
-  }).onOk(async () => {
-    try {
-      await useApiWithAuthorization.delete(`vehicle-service-records/${id}`);
-      await onRequest({
-        pagination: {
-          page: 1,
-          rowsPerPage: pagination.value.rowsPerPage,
-          sortBy: 'created_at',
-        },
-      });
-    } catch (error) {
-      throw error;
-    }
-  });
-};
-
 const setDetailDialog = (data: VehicleServiceRecords) => {
   $state.isDetailDialog = true;
   $state.selectedDetail = data;
 };
 
-const setEditedData = (data: VehicleServiceRecords) => {
-  $state.selectedEdit = data;
-  router.push({ name: 'EditReminderCustomerPage', params: { id: data.id } });
+const toggleContacted = async (id: number) => {
+  try {
+    const response = await useApiWithAuthorization.put(
+      `vehicle-service-records/${id}/toggle-contacted`
+    );
+    console.log(response);
+  } catch (error) {
+    throw error;
+  }
 };
-
-useMetaTitle('Semua Reminder Kendaraan Customer Table');
-
+useMetaTitle('Reminder Customer');
 onMounted(() => {
   // Fetch initial data from the server (1st page)
   onRequest({

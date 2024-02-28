@@ -30,6 +30,28 @@
           <q-td key="name" :props="props">
             {{ props.row.name }}
           </q-td>
+          <q-td key="action" :props="props">
+            <q-btn
+              flat
+              icon="delete"
+              color="red"
+              @click="deleteData(props.row.id)"
+            >
+              <q-tooltip> Hapus </q-tooltip>
+            </q-btn>
+            <q-btn
+              flat
+              icon="edit"
+              color="green"
+              @click="
+                $state.showEditIntervalDialog = true;
+                $state.editedInterval.name = props.row.name;
+                $state.editedInterval.id = props.row.id;
+              "
+            >
+              <q-tooltip> Edit </q-tooltip>
+            </q-btn>
+          </q-td>
         </q-tr>
       </template>
     </q-table>
@@ -38,30 +60,28 @@
         fab
         icon="add"
         color="accent"
-        :to="{ name: 'AddReminderCustomerPage' }"
+        @click="$state.showAddIntervalDialog = true"
       />
     </q-page-sticky>
-    <DetailDialog />
+    <AddIntervalDialog @refreshIntervalData="handleRefreshIntervalData()" />
+    <EditIntervalDialog @refreshIntervalData="handleRefreshIntervalData()" />
   </q-page>
 </template>
 <script setup lang="ts">
 import { QTableColumn } from 'quasar';
-import { VehicleServiceRecords } from 'src/types/vehicleServiceRecords';
 import { onMounted, ref } from 'vue';
 import { useApiWithAuthorization } from 'src/composables/api';
 import { PaginationProps } from 'src/types/paginationProps';
-import { date, useQuasar } from 'quasar';
-import { useDateLocale } from 'src/composables/date';
-import { useVehicleServiceRecords } from 'src/stores/vehicleServiceRecords';
-import DetailDialog from 'components/reminder-customer/DetailDialog.vue';
-import { useRouter } from 'vue-router';
-import { IntervalToNow } from 'src/types/intervalToNow';
+import { useQuasar } from 'quasar';
+import { IntervalToNow, IntervalToNowRows } from 'src/types/intervalToNow';
+import { useIntervalToNowStore } from 'src/stores/intervalToNow';
+import AddIntervalDialog from 'src/components/interval/AddIntervalDialog.vue';
+import EditIntervalDialog from 'src/components/interval/EditIntervalDialog.vue';
+import { useMetaTitle } from 'src/composables/meta';
 
 const { dialog } = useQuasar();
-const router = useRouter();
-const { $state } = useVehicleServiceRecords();
 const rows = ref([]);
-
+const { $state } = useIntervalToNowStore();
 const columns: QTableColumn[] = [
   {
     name: 'name',
@@ -71,13 +91,19 @@ const columns: QTableColumn[] = [
     sortable: true,
     field: (row: IntervalToNow) => row.name,
   },
+  {
+    name: 'action',
+    required: true,
+    label: 'Aksi',
+    align: 'left',
+    sortable: true,
+    field: (row: IntervalToNowRows) => row.action,
+  },
 ];
 
 const loading = ref(false);
 const filter = ref('');
 const onRequest = async (props: PaginationProps) => {
-  const { page, rowsPerPage, sortBy } = props.pagination;
-
   loading.value = true;
 
   try {
@@ -102,7 +128,7 @@ const deleteData = async (id: number) => {
     persistent: true,
   }).onOk(async () => {
     try {
-      await useApiWithAuthorization.delete(`vehicle-service-records/${id}`);
+      await useApiWithAuthorization.delete(`intervals/${id}`);
       await onRequest({
         pagination: {
           page: 1,
@@ -115,6 +141,17 @@ const deleteData = async (id: number) => {
     }
   });
 };
+const handleRefreshIntervalData = () => {
+  onRequest({
+    pagination: {
+      page: 1,
+      rowsPerPage: 1,
+      sortBy: 'created_at',
+    },
+  });
+};
+
+useMetaTitle('List Kategori');
 
 onMounted(() => {
   // Fetch initial data from the server (1st page)

@@ -17,6 +17,24 @@ export interface VehicleServiceRecords {
   created_at?: string;
   updated_at?: string;
 }
+export interface VehicleServiceRecordsWithContacted {
+  id: number;
+  chassis_number: string;
+  license_plate_number: string;
+  interval_to_now: IntervalToNow;
+  interval_to_now_id: number;
+  last_service: string;
+  customer_name: string;
+  customer_phone_number: string;
+  vehicle_model: string;
+  delivery_date: string;
+  service_advisor_name: string;
+  program_name: string;
+  sales_branch: string;
+  created_at?: string;
+  updated_at?: string;
+  contacted: boolean;
+}
 
 export interface AddReminderCustomerForm {
   chassis_number: string;
